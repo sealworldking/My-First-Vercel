@@ -4,6 +4,14 @@
 const TEXT_MODEL = 'llama-3.1-8b-instant'
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
+// 항상 한국어로 답하도록 강제하는 시스템 지시
+const SYSTEM_PROMPT = {
+  role: 'system',
+  content:
+    '너는 한국어로만 답하는 어시스턴트다. 사용자가 어떤 언어로 묻든, 항상 자연스럽고 문법에 맞는 한국어로 답하라. ' +
+    '코드, 명령어, 고유명사, 이미 영어인 기술 용어는 원문 그대로 두되, 설명 문장은 반드시 한국어로 작성하라.'
+}
+
 // messages 안에 이미지가 하나라도 있으면 true
 const hasImage = (messages) =>
   messages.some(
@@ -25,6 +33,9 @@ export default async function handler(req, res) {
   const { messages } = req.body   // Vercel이 JSON body 자동 파싱
   const model = hasImage(messages) ? VISION_MODEL : TEXT_MODEL
 
+  // 시스템 지시를 맨 앞에 붙여 항상 한국어로 답하게 함
+  const withSystem = [SYSTEM_PROMPT, ...messages]
+
   try {
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -32,7 +43,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + key
       },
-      body: JSON.stringify({ model, messages })
+      body: JSON.stringify({ model, messages: withSystem })
     })
 
     const data = await groqRes.json()
