@@ -11,6 +11,7 @@ function App() {
   const [attach, setAttach] = useState(null)      // null | {kind:'image', name, url} | {kind:'text', name, text}
   const [notice, setNotice] = useState('')        // 지원 안 되는 파일 알림
   const [menuOpen, setMenuOpen] = useState(false)  // 좌측 상단 리스트 메뉴 열림 여부
+  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')  // 다크모드
   const [loading, setLoading] = useState(false)
   const logRef = useRef(null)
   const fileRef = useRef(null)
@@ -18,6 +19,11 @@ function App() {
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight })
   }, [messages, loading])
+
+  // 다크모드 선택 유지 (새로고침해도)
+  useEffect(() => {
+    localStorage.setItem('theme', dark ? 'dark' : 'light')
+  }, [dark])
 
   // 파일 선택 → 종류 판별 후 이미지/텍스트/거부 처리
   const handleFile = (e) => {
@@ -106,8 +112,14 @@ function App() {
     )
   }
 
+  // 다크/라이트 전환
+  const toggleDark = () => {
+    setDark((v) => !v)
+    setMenuOpen(false)
+  }
+
   return (
-    <div className="chat-wrap">
+    <div className={`chat-wrap ${dark ? 'dark' : ''}`}>
       <div className="chat-header">
         <div className="menu-wrap">
           <button className="list-btn" onClick={() => setMenuOpen((v) => !v)} aria-label="메뉴">
@@ -118,6 +130,9 @@ function App() {
           {menuOpen && (
             <div className="menu-dropdown">
               <button className="menu-item" onClick={newSession}>새 채팅 시작</button>
+              <button className="menu-item" onClick={toggleDark}>
+                {dark ? '라이트모드로 전환' : '다크모드로 전환'}
+              </button>
             </div>
           )}
         </div>
